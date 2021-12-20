@@ -19,7 +19,7 @@ namespace Eroski.Controllers
         {
             _context = context;
         }
-
+        
         // GET: api/EroskiItems
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EroskiItems>>> GetEroskiItems()
@@ -27,7 +27,7 @@ namespace Eroski.Controllers
             return await _context.EroskiItems.ToListAsync();
         }
 
-        // GET: api/EroskiItems/5
+        // GET: api/EroskiItems/(seccion)
         [HttpGet("{id}")]
         public async Task<ActionResult<EroskiItems>> GetEroskiItems(string id)
         {
@@ -41,34 +41,45 @@ namespace Eroski.Controllers
             return eroskiItems;
         }
 
-        // PUT: api/EroskiItems/5
+        // PUT: api/EroskiItems/(seccion)
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEroskiItems(string id, EroskiItems eroskiItems)
+        public async Task<IActionResult> PutEroskiItems(string id)
         {
-            if (id != eroskiItems.Seccion)
+            //Buscamos la seccion en la base de datos
+            var eroskiItems = await _context.EroskiItems.FindAsync(id);
+            //Si no existe devolvera notFound y si existe se le sumara uno al numero del ticket
+            if (eroskiItems == null)
             {
-                return BadRequest();
+                return NotFound();
+            }
+            else
+            {
+                eroskiItems.numeroTicket++;
             }
 
-            _context.Entry(eroskiItems).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
 
-            try
+        // PUT: api/EroskiItems/Reset/(seccion)
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("Reset/{id}")]
+        public async Task<IActionResult> ResettEroskiItems(string id)
+        {
+            //Buscamos la seccion en la base de datos
+            var eroskiItems = await _context.EroskiItems.FindAsync(id);
+            //Si no existe devolvera notFound y si existe se le sumara uno al numero del ticket
+            if (eroskiItems == null)
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
+            else
             {
-                if (!EroskiItemsExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                eroskiItems.numeroTicket = 0;
             }
 
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
